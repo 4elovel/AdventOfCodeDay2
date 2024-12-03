@@ -1,4 +1,5 @@
 use std::arch::aarch64::int32x2_t;
+use std::vec::Splice;
 
 fn main() {
     println!("TOTAL {}",run(get_input()));
@@ -29,6 +30,65 @@ fn is_report_safe(report: &str) -> bool {
         .collect();
 
     // validate first-second level difference
+    let first_level_pair_diff: u8 = levels[0].abs_diff(levels[1]);
+    if first_level_pair_diff == 0 || first_level_pair_diff > 3 {
+
+        let spliced1: Vec<u8> = levels
+            .iter()
+            .enumerate()
+            .filter(|&(idx, _)| idx != 1) // Exclude the element at index `i`
+            .map(|(_, &value)| value)
+            .collect();
+
+        println!("FIRST VALIDATION {:?} SECOND VALIDATION {:?}", &levels[1..],spliced1);
+
+        if try_array(Vec::from(&levels[1..])) || try_array(spliced1) {
+            return true;
+        }
+        return false;
+    }
+
+    // set level order - ascending or descending
+    let mut is_order_ascending: bool = levels[0] < levels[1];
+
+    // start with the second level, since first diff was validated
+    for i in 1..levels.len()-1 {
+        let diff: u8 = levels[i].abs_diff(levels[i+1]);
+        // validate level-pair
+        if (levels[i] < levels[i+1]) != is_order_ascending || diff == 0 || diff > 3 {
+
+            let spliced1: Vec<u8> = levels
+                .iter()
+                .enumerate()
+                .filter(|&(idx, _)| idx != i) // Exclude the element at index `i`
+                .map(|(_, &value)| value)
+                .collect();
+
+            let spliced2: Vec<u8> = levels
+                .iter()
+                .enumerate()
+                .filter(|&(idx, _)| idx != i+1) // Exclude the element at index `i`
+                .map(|(_, &value)| value)
+                .collect();
+
+            let spliced3: Vec<u8> = levels
+                .iter()
+                .enumerate()
+                .filter(|&(idx, _)| idx != i-1) // Exclude the element at index `i`
+                .map(|(_, &value)| value)
+                .collect();
+
+            println!("SPLICE 1 : {:?} SPLICE 2 : {:?} SPLICE 3 : {:?} PROBLEMATIC: {}",spliced1,spliced2,spliced3,i);
+            if try_array(spliced1) || try_array(spliced2)|| try_array(spliced3) {
+                return true;
+            }
+            return false;
+        }
+    }
+    true
+}
+fn try_array(levels : Vec<u8>)->bool{
+
     let first_level_pair_diff: u8 = levels[0].abs_diff(levels[1]);
     if first_level_pair_diff == 0 || first_level_pair_diff > 3 {
         return false;
